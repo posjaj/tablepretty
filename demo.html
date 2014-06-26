@@ -1,0 +1,475 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+    <title>固定标题列、标题头table</title>
+    <script src="jquery-1.11.0.min.js"></script>
+
+    <style>
+        .tablepretty11 {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+            font-size: 13px;
+            font-family: Microsoft Yahei;
+        }
+
+            .tablepretty11 table {
+                border-collapse: collapse;
+                border-spacing: 0px;
+                width: 100%;
+                border: #C0C0C0 solid 0px;
+            }
+
+                .tablepretty11 table td {
+                    border: 1px solid #C0C0C0;
+                    height: 25px;
+                    text-align: center;
+                    border-left: 0px;
+                }
+
+                .tablepretty11 table th {
+                    background: #E7F0F8;
+                    /*color: #a10333;*/ /*标题颜色*/
+                    border: #C0C0C0 solid 1px;
+                    white-space: nowrap;
+                    height: 25px;
+                    border-top: 0px;
+                    border-left: 0px;
+                }
+
+            .tablepretty11 .t_left {
+                width: 30%;
+                height: auto;
+                float: left;
+                border-top: 1px solid #C0C0C0;
+                border-left: 1px solid #C0C0C0;
+            }
+
+            /*t_r_content和cl_freeze高度相差20px， 高度为外观显示高度，可根据情况调整*/
+            .tablepretty11 .t_r_content {
+                width: 100%;
+                /*height: 220px;*/
+                background: #fff;
+                overflow: auto;
+                border-right: 1px solid #C0C0C0;
+            }
+
+            .tablepretty11 .cl_freeze {
+                /*height: 200px;*/
+                overflow: hidden;
+                width: 100%;
+            }
+            /* width 调整左边标题列宽度（左侧外观显示宽度）; 指定为width:auto 在Opera下显示有问题; height比 t_r_content 高度小20px*/
+
+            /* width 宽度为 右侧外观显示宽度 实际显示宽度大小为“t_r”宽度加上“cl_freeze”宽度 */
+            /* 如果显示不正常，调整 t_r的width 使其和t_left的width之和小于100%；等于100%时会有问题*/
+            .tablepretty11 .t_r {
+                width: 100%;
+                height: auto;
+                float: left;
+                border-top: 1px solid #C0C0C0;
+                /*border-right: #C0C0C0 solid 1px;*/
+            }
+
+                .tablepretty11 .t_r table {
+                    /*width: 1000px;*/
+                }
+
+            .tablepretty11 .t_r_title {
+                /*width: 1020px;*/
+                background: #E7F0F8;
+            }
+            /*宽度比 t_r table 大20px （至少大20，小了滚动条滑到右侧显示有问题）*/
+            .tablepretty11 .t_r_t {
+                width: 100%;
+                overflow: hidden;
+                border-right: 1px solid #C0C0C0;
+            }
+
+            .tablepretty11 .clear_border_top {
+                border-top: 0px;
+            }
+
+            .tablepretty11 .clear_border_bottom {
+                border-bottom: 0px;
+            }
+
+            .tablepretty11 .clear_border_right {
+                border-right: 0px;
+            }
+
+            .tablepretty11 .num {
+                background: #e5f1f4;
+                width: 35px;
+            }
+
+            .tablepretty11 tr.even {
+                /* 	background: #e5f1f4; */
+                background: #ccffcc;
+            }
+
+            .tablepretty11 tr.odd {
+                background: #f8fbfc;
+            }
+
+            .tablepretty11 th.over {
+                background: #d8e1e8;
+                cursor: pointer;
+            }
+
+            .tablepretty11 th.sorting_asc {
+                background-image: url(tablePretty/sort_asc.png);
+                background-repeat: no-repeat;
+                background-position: right;
+            }
+
+            .tablepretty11 th.sorting_desc {
+                background-image: url(tablePretty/sort_desc.png);
+                background-repeat: no-repeat;
+                background-position: right;
+            }
+
+            .tablepretty11 .t_r {
+                border-left: #C0C0C0 solid 1px;
+                border-bottom: #C0C0C0 solid 1px;
+            }
+    </style>
+    <script>
+        $(function () {
+            prettyInit();
+            autoWidthHeight();
+            $(window).resize(function () {
+                autoWidthHeight();
+            })
+        })
+        //table 初始化函数
+        function prettyInit() {
+            //添加序号列的背景
+            $(".tablepretty11 table tr th:first").addClass("num");
+            $(".tablepretty11 .t_r_content table tr").each(function () {
+                $(this).children().first().addClass("num");
+            });
+            //去掉内容 table第一行的上边线
+            $(".tablepretty11 .t_r_content table tr:first td").addClass("clear_border_top");
+            //去掉内容 table最后一行的下边线
+            $(".tablepretty11 .t_r_content table tr:last td").addClass("clear_border_bottom");
+            //添加隔行变色效果
+            $(".tablepretty11 .t_r_content table tr:even").addClass("even");
+            $(".tablepretty11 .t_r_content table tr:odd").addClass("odd");
+            //添加标题移入移出事件
+            $(".tablepretty11 .t_r_title table th:not(th:first)").mouseover(function () {
+                $(this).addClass("over");
+            });
+            $(".tablepretty11 .t_r_title table th:not(th:first)").mouseout(function () {
+                $(this).removeClass("over");
+            });
+
+            //添加元数据，排序时使用
+            var metaNo = 1;
+            $(".tablepretty11 .t_r_title table th:not(th:first)").each(function () {
+                $(this).data("no", metaNo++);
+            });
+            //添加标题事件
+            $(".tablepretty11 .t_r_title table th:not(th:first)").click(function () {
+                //排序序号，即第几列，从1开始
+                var no = $(this).data("no");
+                //排序字段
+                var sortFeild = $(this).html();
+                //排序方式
+                var sort = $(this).data("sort");
+                if (typeof (sort) == "undefined") {
+                    sort = "asc";
+                }
+                else if (sort == "asc") {
+                    sort = "desc";
+                }
+                else if (sort == "desc") {
+                    sort = "asc";
+                }
+                $(this).data("sort", sort);
+                //添加排序背景图片
+                $(this).parent().children().removeClass("sorting_asc");
+                $(this).parent().children().removeClass("sorting_desc");
+                $(this).addClass("sorting_" + sort);
+                var tableArray = new Array();
+                //获取排序数据
+                $(".tablepretty11 .t_r_content table tr").each(function () {
+                    var trObj = new Object();
+                    var serialNo = 0;
+                    $(this).children().each(function () {
+                        if (serialNo > 0) {
+                            trObj["column" + serialNo] = $(this).html();
+                        }
+                        serialNo++;
+                    });
+                    tableArray.push(trObj);
+                });
+                if (sort == "desc") {
+                    tableArray.sort(sortBy('column' + no, true, parseInt));
+                }
+                else {
+                    tableArray.sort(sortBy('column' + no, false, parseInt));
+                }
+                var i = 0, j;
+                $(".tablepretty11 .t_r_content table tr").each(function () {
+                    j = 1;
+                    $(this).find("td:not(td:first)").each(function () {
+                        $(this).html("");
+                        $(this).html(tableArray[i]["column" + j]);
+                        j++;
+                    });
+                    i++;
+                });
+            });
+        }
+        //排序函数 primer：parseInt数字排序；String字符串排序
+        var sortBy = function (filed, rev, primer) {
+            rev = (rev) ? -1 : 1;
+            return function (a, b) {
+                a = a[filed];
+                b = b[filed];
+                if (typeof (primer) != 'undefined') {
+                    a = primer(a);
+                    b = primer(b);
+                }
+                if (a < b) { return rev * -1; }
+                if (a > b) { return rev * 1; }
+                return 1;
+            }
+        };
+        //自适应屏幕高度
+        function autoWidthHeight() {
+            //计算高度
+            //表格所在窗口的高度
+            var winHeight = $(window).height() - 70;//减50为适应屏幕，可调
+            //表格数据的高度
+            var tabHeight = $(".tablepretty11 .t_r_content table").height();
+            //如果数据高度大于窗口高度，则需要设置div的高度以显示滚动条。
+            if (tabHeight > winHeight) {
+                //设置高度
+                $(".tablepretty11 .t_r_content").height(winHeight);
+                //设置滚动条
+                var t_r_width = $(".tablepretty11 .t_r").width();
+                $(".tablepretty11 .t_r_title").width(t_r_width);
+                $(".tablepretty11 .t_r table").width(t_r_width - 17);
+                //增加右边线
+                $(".tablepretty11 .t_r .t_r_t,.tablepretty11 .t_r .t_r_content").removeClass("clear_border_right");
+            }
+            else {
+                //设置高度
+                $(".tablepretty11 .t_r_content").height(tabHeight);
+                //去掉滚动条
+                var t_r_width = $(".tablepretty11 .t_r").width();
+                $(".tablepretty11 .t_r_title").width(t_r_width);
+                $(".tablepretty11 .t_r table").width(t_r_width);
+                //去掉右边线
+                $(".tablepretty11 .t_r .t_r_t,.tablepretty11 .t_r .t_r_content").addClass("clear_border_right");
+            }
+        }
+        //滚动条
+        function autoScroll() {
+            var a = document.getElementById("t_r_content").scrollTop;
+            var b = document.getElementById("t_r_content").scrollLeft;
+            var obj = document.getElementById("cl_freeze");
+            if (obj) {
+                document.getElementById("cl_freeze").scrollTop = a;
+            }
+            document.getElementById("t_r_t").scrollLeft = b;
+        }
+    </script>
+</head>
+
+<body>
+    <div class="tablepretty11">
+        <div class="t_r">
+            <div class="t_r_t" id="t_r_t">
+                <div class="t_r_title">
+                    <table>
+                        <tr>
+                            <th></th>
+                            <th width="20%">字段B</th>
+                            <th width="10%">字段C</th>
+                            <th width="20%">字段D</th>
+                            <th width="20%">字段E</th>
+                            <th>字段F</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="t_r_content" id="t_r_content" onscroll="autoScroll()">
+                <table>
+                    <tr>
+                        <td>1</td>
+                        <td width="20%">1</td>
+                        <td width="10%">1</td>
+                        <td width="20%">1</td>
+                        <td width="20%">1</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>2</td>
+                        <td>2</td>
+                        <td>2</td>
+                        <td>2</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>3</td>
+                        <td>3</td>
+                        <td>3</td>
+                        <td>3</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>4</td>
+                        <td>4</td>
+                        <td>4</td>
+                        <td>4</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>5</td>
+                        <td>5</td>
+                        <td>5</td>
+                        <td>5</td>
+                        <td>5</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>6</td>
+                        <td>6</td>
+                        <td>6</td>
+                        <td>6</td>
+                        <td>6</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>7</td>
+                        <td>7</td>
+                        <td>7</td>
+                        <td>7</td>
+                        <td>7</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>8</td>
+                        <td>8</td>
+                        <td>8</td>
+                        <td>8</td>
+                        <td>8</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>9</td>
+                        <td>9</td>
+                        <td>9</td>
+                        <td>9</td>
+                        <td>9</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>10</td>
+                        <td>10</td>
+                        <td>10</td>
+                        <td>10</td>
+                        <td>10</td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>11</td>
+                        <td>11</td>
+                        <td>11</td>
+                        <td>11</td>
+                        <td>11</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>12</td>
+                        <td>12</td>
+                        <td>12</td>
+                        <td>12</td>
+                        <td>12</td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>13</td>
+                        <td>13</td>
+                        <td>13</td>
+                        <td>13</td>
+                        <td>13</td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td>14</td>
+                        <td>14</td>
+                        <td>14</td>
+                        <td>14</td>
+                        <td>14</td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>15</td>
+                        <td>15</td>
+                        <td>15</td>
+                        <td>15</td>
+                        <td>15</td>
+                    </tr>
+                    <tr>
+                        <td>16</td>
+                        <td>16</td>
+                        <td>16</td>
+                        <td>16</td>
+                        <td>16</td>
+                        <td>16</td>
+                    </tr>
+                    <!--<tr>
+                        <td>17</td>
+                        <td>17</td>
+                        <td>17</td>
+                        <td>17</td>
+                        <td>17</td>
+                        <td>17</td>
+                    </tr>
+                    <tr>
+                        <td>18</td>
+                        <td>18</td>
+                        <td>18</td>
+                        <td>18</td>
+                        <td>18</td>
+                        <td>18</td>
+                    </tr>
+                    <tr>
+                        <td>19</td>
+                        <td>19</td>
+                        <td>19</td>
+                        <td>19</td>
+                        <td>19</td>
+                        <td>19</td>
+                    </tr>
+                    <tr>
+                        <td>20</td>
+                        <td>20</td>
+                        <td>20</td>
+                        <td>20</td>
+                        <td>20</td>
+                        <td>20</td>
+                    </tr>-->
+                    <tr>
+                        <td>20</td>
+                        <td>20</td>
+                        <td>20</td>
+                        <td>20</td>
+                        <td>20</td>
+                        <td>20</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
